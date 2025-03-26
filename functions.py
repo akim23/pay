@@ -1,3 +1,4 @@
+import base64
 import pandas as pd
 import os
 import streamlit as st
@@ -35,3 +36,13 @@ def add_or_update_entry(job_type, hours, rate, cash_tips, card_tips):
         "Hourly Earnings": hourly_earnings,
         "Total Earnings": total_pay
     })
+
+# Function to encode an image to base64
+def image_to_base64(image_path):
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode()
+
+# Function to encode audio to base64
+def get_audio_base64(audio_path):
+    with open(audio_path, "rb") as audio_file:
+        return base64.b64encode(audio_file.read()).decode()
