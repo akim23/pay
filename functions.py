@@ -21,10 +21,9 @@ def save_graph_data(data):
 def add_or_update_entry(job_type, hours, rate, cash_tips, card_tips):
     total_tips = cash_tips + card_tips
     hourly_tips = total_tips / hours if hours > 0 else 0
-    hourly_earnings = (hours * rate + total_tips) / hours if hours > 0 else 0  # Hourly earnings including tips
+    hourly_earnings = (hours * rate + total_tips) / hours if hours > 0 else 0
     total_pay = (hours * rate) + total_tips
 
-    # Add new entry with date
     st.session_state.work_data.append({
         "Job Type": job_type,
         "Hours Worked": hours,
@@ -37,12 +36,13 @@ def add_or_update_entry(job_type, hours, rate, cash_tips, card_tips):
         "Total Earnings": total_pay
     })
 
+# Function to encode audio as HTML
+def get_audio_html(audio_path):
+    with open(audio_path, "rb") as audio_file:
+        audio_base64 = base64.b64encode(audio_file.read()).decode()
+    return f'<audio controls autoplay loop><source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3"></audio>'
+
 # Function to encode an image to base64
 def image_to_base64(image_path):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode()
-
-# Function to encode audio to base64
-def get_audio_base64(audio_path):
-    with open(audio_path, "rb") as audio_file:
-        return base64.b64encode(audio_file.read()).decode()

@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.express as px
 from datetime import datetime
 import os
-from functions import add_or_update_entry, load_graph_data, save_graph_data, get_audio_base64, image_to_base64
+from functions import add_or_update_entry, load_graph_data, save_graph_data, get_audio_html, image_to_base64
 
 # Path to your local background image
 image_path = "images/back1.jpg"
@@ -35,46 +35,13 @@ audio_path = "Music/NewHorizons.mp3"
 if "is_playing" not in st.session_state:
     st.session_state.is_playing = False
 
-# Function to generate HTML for autoplaying music (hidden)
-def play_music():
-    if not st.session_state.is_playing:
-        st.session_state.is_playing = True
-        audio_html = f"""
-        <audio id="bg-music" autoplay loop>
-            <source src="data:audio/mp3;base64,{get_audio_base64(audio_path)}" type="audio/mp3">
-        </audio>
-        """
-        st.markdown(audio_html, unsafe_allow_html=True)
+# Toggle button for music
+if st.button("🎵 Toggle Music"):
+    st.session_state.is_playing = not st.session_state.is_playing
 
-# Function to stop music
-def stop_music():
-    st.session_state.is_playing = False
-    st.markdown(
-        """
-        <script>
-        var audio = document.getElementById("bg-music");
-        if (audio) {
-            audio.pause();
-            audio.currentTime = 0;
-        }
-        </script>
-        """,
-        unsafe_allow_html=True,
-    )
-
-# Music Control Buttons
-col1, col2 = st.columns(2)
-with col1:
-    if st.button("🎵 Play Music"):
-        play_music()
-
-with col2:
-    if st.button("⏹️ Stop Music"):
-        stop_music()
-
-# Persist music state
+# Display the audio player only if music should play
 if st.session_state.is_playing:
-    play_music()
+    st.markdown(get_audio_html(audio_path), unsafe_allow_html=True)
 
 st.title("Bi-weekly Work Tracker")
 
@@ -140,8 +107,8 @@ with graph_col1:
 
     if st.button("Add Pier 50"):
         try:
-            date_str = pier50_date.replace("/", "-")  # Replace / with -
-            date = datetime.strptime(date_str, "%Y-%m-%d").date()  # Parse with dashes
+            date_str = pier50_date.replace("/", "-")
+            date = datetime.strptime(date_str, "%Y-%m-%d").date()
             earnings = float(pier50_earnings) if pier50_earnings else 0.0
             st.session_state.graph_data.append({
                 "Date": date,
@@ -159,8 +126,8 @@ with graph_col2:
 
     if st.button("Add Burgers and Brew"):
         try:
-            date_str = burgers_date.replace("/", "-")  # Replace / with -
-            date = datetime.strptime(date_str, "%Y-%m-%d").date()  # Parse with dashes
+            date_str = burgers_date.replace("/", "-")
+            date = datetime.strptime(date_str, "%Y-%m-%d").date()
             earnings = float(burgers_earnings) if burgers_earnings else 0.0
             st.session_state.graph_data.append({
                 "Date": date,
@@ -174,10 +141,23 @@ with graph_col2:
 if st.session_state.graph_data:
     graph_df = pd.DataFrame(st.session_state.graph_data)
     graph_df = graph_df.sort_values('Date')
+
+    # Ensure that the 'Date' column is in datetime format
+    graph_df['Date'] = pd.to_datetime(graph_df['Date'])
+
     fig = px.line(graph_df, x='Date', y='Total Earnings', color='Job Type',
                   title='Daily Earnings by Job', labels={'Total Earnings': 'Earnings ($)', 'Date': 'Work Date'},
                   markers=True)
-    fig.update_layout(xaxis_title="Date", yaxis_title="Earnings ($)", legend_title="Job", hovermode='x unified')
+
+    # Update the x-axis to show only the date (removes the time portion)
+    fig.update_layout(
+        xaxis_title="Date",
+        yaxis_title="Earnings ($)",
+        legend_title="Job",
+        hovermode='x unified',
+        xaxis=dict(tickformat='%Y-%m-%d')  # Formats the tick labels as 'YYYY-MM-DD'
+    )
+
     st.plotly_chart(fig, use_container_width=True)
 
     if st.button("Clear Graph Data"):
